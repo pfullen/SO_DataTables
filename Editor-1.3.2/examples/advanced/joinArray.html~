@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+	<link rel="shortcut icon" type="image/ico" href="http://www.datatables.net/favicon.ico">
+	<meta name="viewport" content="initial-scale=1.0, maximum-scale=2.0">
+
+	<title>Editor example - Join tables - one-to-many join</title>
+	<link rel="stylesheet" type="text/css" href="css/jquery.dataTables.css">
+	<link rel="stylesheet" type="text/css" href="css/dataTables.tableTools.css">
+	<link rel="stylesheet" type="text/css" href="css/dataTables.editor.css">
+	<link rel="stylesheet" type="text/css" href="css/shCore.css">
+	<link rel="stylesheet" type="text/css" href="css/demo.css">
+	<style type="text/css" class="init">
+td.details-control {
+	background: url('images/details_open.png') no-repeat center center;
+	cursor: pointer;
+}
+tr.shown td.details-control {
+	background: url('images/details_close.png') no-repeat center center;
+}
+	</style>
+	<script type="text/javascript" language="javascript" src="js/jquery.js"></script>
+	<script type="text/javascript" language="javascript" src="js/jquery.dataTables.js"></script>
+	<script type="text/javascript" language="javascript" src="js/dataTables.tableTools.js"></script>
+	<script type="text/javascript" language="javascript" src="js/dataTables.editor.js"></script>
+	<script type="text/javascript" language="javascript" src="js/shCore.js"></script>
+	<script type="text/javascript" language="javascript" src="js/demo.js"></script>
+	<script type="text/javascript" language="javascript" src="js/editor-demo.js"></script>
+	<script type="text/javascript" language="javascript" class="init" > 
+var editor;
+$(document).ready(function() {
+
+function format (d) {
+ 
+ //alert(d.user_access.qty);
+ var string ="<tr> <th> Product </th> <th> Qty </th>  <th> Price </th> </tr>";
+ for (var i=0; i < d.access.length; i++) {
+
+ string = string + '<tr> <td>' +  d.access[i].name + '</td>   <td>' +  d.access[i].qty + '</td>   <td> $' +  d.access[i].price + '</td>  </tr>';
+ console.log(d.access[i].id);
+ //console.log('Type of ' + typeof d.access[i].name);
+ }
+ console.log('This is the string ' + string);
+ return string;
+};  
+
+
+
+
+
+
+
+	editor = new $.fn.dataTable.Editor( {
+		ajax: "../php/joinArray.php",
+		table: "#example",
+		fields: [ {
+				label: "Order Number:",
+				name:  "users.first_name"
+			}, {
+				label: "Customer:",
+				name:  "users.customer"
+			}, {
+				label: "SO Date:",
+				name:  "users.site" //,
+			//	type:  "date"
+			} ,
+								
+			  {
+				"label": "Order Details:",
+				"name": "access[].id",
+				"type": "checkbox"
+		} 
+		]
+	} );
+	
+	
+	var table = $('#example').DataTable( {
+			dom:  'T<"clear">lfrtip',
+			table: "#example",
+		"ajax": {
+			url: "../php/joinArray.php",
+			type: 'POST'
+		},
+		
+		"columns": [
+			{
+				"class":          'details-control',
+				"orderable":      false,
+				"data":           null,
+				"defaultContent": ''
+			},
+			
+			{ data: "users.id" },
+			{ data: "users.customer" },
+			{ data: "users.so_date" }
+			
+		],
+		"order": [[0, 'asc']],
+		tableTools: {
+			"sSwfPath": "copy_csv_xls_pdf.swf",
+			sRowSelect: "os",
+			aButtons: [
+				{ sExtends: "editor_create", editor: editor },
+				{ sExtends: "editor_edit",   editor: editor },
+				{ sExtends: "editor_remove", editor: editor },
+			{
+					sExtends: "collection",
+					sButtonText: "Save",
+					sButtonClass: "save-collection",
+					aButtons: [ 'copy', 'csv', 'xls', 'pdf' ]
+				},
+				'print'
+				//'xls',
+				//'pdf'
+			
+			//	'copy',
+ 		//	   'xls',
+  			//  'csv',
+       //    'pdf',
+       //    'print'
+			]
+		} ,
+		initComplete: function ( settings, json ) {
+		editor.field( 'users.sites' ).update( json.sites );
+		editor.field( 'access[].id' ).update( json.access );
+		
+		}
+	} );
+	
+	// Add event listener for opening and closing details
+	$('#example tbody').on('click', 'td.details-control', function (e) {
+	  
+		
+		//alert(e.target.tr);
+		//var row = $(e.target);
+     //alert(row.find('.details-control').html());
+		
+		var tr = $(this).closest('tr');
+	
+		var row = table.row( tr ).html();
+		
+		alert(row);
+
+		if ( row.child.isShown() ) {
+			// This row is already open - close it
+			row.child.hide();
+			tr.removeClass('shown');
+		}
+		else {
+			// Open this row
+		//	alert(row.data);
+		//	row.child( format(row.data()) ).show();
+		//	tr.addClass('shown');
+		}
+	} );
+	
+} );
+
+
+	
+
+/*
+var editor; // use a global for the submit and return data rendering in the examples
+
+$(document).ready(function() {
+	editor = new $.fn.dataTable.Editor( {
+		ajax: "../php/joinArray.php",
+		table: "#example",
+		fields: [ {
+				label: "First name:",
+				name:  "users.first_name"
+			}, {
+				label: "Last name:",
+				name:  "users.last_name"
+			}, {
+				label: "Site:",
+				name:  "users.site",
+				type:  "select"
+			}, {
+				"label": "Access:",
+				"name": "access[].id",
+				"type": "checkbox"
+			}
+		]
+	} );
+
+	$('#example').dataTable( {
+		dom: "Tfrtip",
+		ajax: {
+			url: "../php/joinArray.php",
+			type: 'POST'
+		},
+		
+		columns: [
+			{
+				"class":          'details-control',
+				"orderable":      false,
+				"data":           null,
+				"defaultContent": ''
+			},
+			{ data: "users.first_name" },
+			{ data: "users.last_name" },
+			{ data: "sites.name" },
+			{ data: "access", render: "[, ].name" }
+		],
+		"order": [[0, 'asc']],
+		tableTools: {
+		"sSwfPath": "copy_csv_xls_pdf.swf",
+			sRowSelect: "os",
+			aButtons: [
+				{ sExtends: "editor_create", editor: editor },
+				{ sExtends: "editor_edit",   editor: editor },
+				{ sExtends: "editor_remove", editor: editor },
+				'copy',
+ 			   'xls',
+  			  'csv',
+           'pdf',
+           'print'
+			]
+		},
+		initComplete: function ( settings, json ) {
+			editor.field( 'users.site' ).update( json.sites );
+			editor.field( 'access[].id' ).update( json.access );
+		}
+	} );
+	// Add event listener for opening and closing details
+	$('#example tbody').on('click', 'td.details-control', function () {
+	   alert('you clicked expand');
+		var tr = $(this).closest('tr');
+		var row = table.row( tr );
+
+		if ( row.child.isShown() ) {
+			// This row is already open - close it
+			row.child.hide();
+			tr.removeClass('shown');
+		}
+		else {
+			// Open this row
+			row.child( format(row.data()) ).show();
+			tr.addClass('shown');
+		}
+	} );
+} );
+
+*/
+
+	</script>
+</head>
+
+<body class="dt-example">
+	<div class="container">
+		<section>
+			<h1>CLS Medical, Inc <span>Sales Order Report</span></h1>
+
+			
+
+			<table id="example" class="display" cellspacing="0" width="100%">
+				<thead>
+					<tr>
+					   <th></th>
+						<th>SO Number</th>
+						<th>Customer</th>
+						<th>SO Date</th>
+					
+					</tr>
+				</thead>
+
+				<tfoot>
+					<tr>
+						 <th></th>
+						<th>SO Number</th>
+						<th>Customer</th>
+						<th>SO Date</th>
+						
+					</tr>
+				</tfoot>
+			</table>
+
+			</div>
+	</section>
+</body>
+</html>

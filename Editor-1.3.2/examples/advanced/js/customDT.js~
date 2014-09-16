@@ -1,0 +1,99 @@
+var editor;
+$(document).ready(function() {
+
+function format (d) {
+ 
+ alert('the function has been called');
+ return d.sites.name;
+};  
+
+
+
+
+
+
+
+	editor = new $.fn.dataTable.Editor( {
+		ajax: "joinLinkTable.php",
+		table: "#example",
+		fields: [ {
+				label: "First name:",
+				name:  "users.first_name"
+			}, {
+				label: "Last name:",
+				name:  "users.last_name"
+			}, {
+				label: "Site:",
+				name:  "users.site",
+				type:  "select"
+			}, {
+				label: "Department:",
+				name:  "user_dept.dept_id",
+				type:  "select"
+			}
+		]
+	} );
+	
+	
+	var table = $('#example').DataTable( {
+			dom:  'T<"clear">lfrtip',
+			table: "#example",
+		"ajax": {
+			url: "../php/joinArray.php",
+			type: 'POST'
+		},
+		
+		"columns": [
+			{
+				"class":          'details-control',
+				"orderable":      false,
+				"data":           null,
+				"defaultContent": ''
+			},
+			
+			{ data: "users.first_name" },
+			{ data: "users.last_name" },
+			{ data: "sites.name" },
+			{ data: "dept.name" }
+		],
+		"order": [[0, 'asc']],
+		tableTools: {
+			"sSwfPath": "copy_csv_xls_pdf.swf",
+			sRowSelect: "os",
+			aButtons: [
+				{ sExtends: "editor_create", editor: editor },
+				{ sExtends: "editor_edit",   editor: editor },
+				{ sExtends: "editor_remove", editor: editor },
+				'copy',
+ 			   'xls',
+  			  'csv',
+           'pdf',
+           'print'
+			]
+		},
+		initComplete: function ( settings, json ) {
+			editor.field( 'users.site' ).update( json.sites );
+			editor.field( 'user_dept.dept_id' ).update( json.dept );
+		}
+	} );
+	
+	// Add event listener for opening and closing details
+	$('#example tbody').on('click', 'td.details-control', function () {
+	   alert('you clicked expand');
+		var tr = $(this).closest('tr');
+		var row = table.row( tr );
+
+		if ( row.child.isShown() ) {
+			// This row is already open - close it
+			row.child.hide();
+			tr.removeClass('shown');
+		}
+		else {
+			// Open this row
+			row.child( format(row.data()) ).show();
+			tr.addClass('shown');
+		}
+	} );
+} );
+
+	
